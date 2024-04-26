@@ -16,9 +16,9 @@ class Habit(models.Model):
     action = models.CharField(max_length=255, verbose_name='действие', **NULLABLE)
     is_pleasant = models.BooleanField(default=False, verbose_name='признак приятной привычки')
     related_habit = models.ForeignKey('self', on_delete=models.SET_NULL, verbose_name='связанная привычка', **NULLABLE)
-    periodicity = models.PositiveSmallIntegerField(verbose_name='периодичность', **NULLABLE)
+    periodicity = models.IntegerField(verbose_name='периодичность', **NULLABLE)
     reward = models.CharField(max_length=255, verbose_name='вознаграждение', **NULLABLE)
-    execute_time = models.PositiveSmallIntegerField(verbose_name='время на выполнение', **NULLABLE)
+    execute_time = models.IntegerField(default=120, verbose_name='время на выполнение', **NULLABLE)
     is_public = models.BooleanField(default=False, verbose_name='признак публичности')
 
     def __str__(self):
