@@ -185,4 +185,11 @@ CELERY_TASK_TRACK_STARTED = True
 # Максимальное время на выполнение задачи
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
+CELERY_BEAT_SCHEDULE = {
+    'send_habit_reminder': {
+        'task': 'habits.tasks.send_habit_reminder',
+        'schedule': timedelta(minutes=1),
+    },
+}
+
 TELEGRAM_API_TOKEN = os.getenv('TELEGRAM_API_TOKEN')

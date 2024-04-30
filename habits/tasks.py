@@ -1,49 +1,40 @@
-import logging
+import os
 import requests
-from datetime import datetime
 from celery import shared_task
-from django.conf import settings
-
 from habits.models import Habit
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-def get_chat_id(telegram_username):
-    api_telegram = f'https://api.telegram.org/bot{settings.TELEGRAM_API_TOKEN}/getUpdates'
-    response = requests.get(api_telegram)
-    data = response.json()
-
-    if data.get('ok', False):
-        for result in data.get('result', []):
-            message = result.get('message', {})
-            if 'from' in message and 'username' in message['from']:
-                if telegram_username[1:] == message['from']['username']:
-                    return message['from']['id']
-    return None
+from users.models import User
+from datetime import datetime
 
 
 @shared_task
-def check_habits_reminder():
-    current_day = datetime.now().weekday()
-    datetime_now = datetime.now()
+def send_habit_reminder():
+    users = User.objects.all()
 
-    habits = Habit.objects.filter(time=datetime_now)
-    for habit in habits:
-        logger.info(f"Processing habit: {habit.action}")
-        if habit.user and habit.user.telegram_chat_id:
-            if habit.periodicity == '0' or int(habit.periodicity) == current_day:
-                message = f"Время выполнить: {habit.action}"
-                send_reminder_to_user.delay(habit.user.telegram_chat_id, message)
+    for user in users:
+        habits = Habit.objects.filter(user=user)
+
+        for habit in habits:
+            execute_time = habit.execute_time
+
+            last_notification = habit.last_notification
+
+            now = datetime.now()
+            start_time = habit.time
+
+            if (last_notification is None or last_notification.date() < now.date()) and start_time == now:
+                send_notification.delay(habit, execute_time)
 
 
 @shared_task
-def send_reminder_to_user(chat_id, message):
-    api_telegram = f'https://api.telegram.org/bot{settings.TELEGRAM_API_TOKEN}/sendMessage'
-    params = {'chat_id': chat_id, 'text': message}
-    response = requests.post(api_telegram, data=params)
-    if response.status_code == 200:
-        logger.info('Напоминание отправлено в Телеграм')
-    else:
-        logger.info(f'Ошибка при отправлении в Телеграм: {response.text}')
+def send_notification(habit, execute_time):
+    api_telegram_token = os.getenv('TELEGRAM_API_TOKEN')
+    telegram_chat_id = habit.user.telegram_chat_id
+    url = f'https://api.telegram.org/bot{api_telegram_token}/sendMessage'
+    message = f"Напоминание:\n - необходимо выполнить привычку '{habit.action}' за: {execute_time} секунд."
+    requests.post(url, data={
+        'chat_id': telegram_chat_id,
+        'text': message
+    })
+
+    habit.last_notification = datetime.now()
+    habit.save()
