@@ -20,9 +20,10 @@ class Habit(models.Model):
     reward = models.CharField(max_length=255, verbose_name='вознаграждение', **NULLABLE)
     execute_time = models.IntegerField(default=120, verbose_name='время на выполнение', **NULLABLE)
     is_public = models.BooleanField(default=False, verbose_name='признак публичности')
+    last_notification = models.DateTimeField(verbose_name='Дата и время последнего оповещения', **NULLABLE)
 
     def __str__(self):
-        return f'{self.owner} - {self.action}'
+        return f'{self.user} - {self.action}'
 
     class Meta:
         verbose_name = 'привычка'

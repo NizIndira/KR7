@@ -15,7 +15,7 @@ class HabitCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         habit = serializer.save()
-        habit.owner = self.request.user
+        habit.user = self.request.user
         habit.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
