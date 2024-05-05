@@ -171,10 +171,10 @@ CORS_ALLOW_ALL_ORIGINS = False
 # Настройки для Celery
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_BROKER_URL = os.getenv('BROKER_URL')
 
 # URL-адрес брокера результатов, также Redis
-CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = os.getenv('RESULT_BACKEND')
 
 # Часовой пояс для работы Celery
 CELERY_TIMEZONE = 'UTC'
